@@ -29,9 +29,9 @@ namespace ScaleDownEventHubs
                .AddEnvironmentVariables()
                .Build();
 
-            var creds = GetCredentials(config, log);
+            var creds = GetAzureCredentials(config, log);
 
-            var subs = GetSubscriptions(creds, log);
+            var subs = GetAzureSubscriptions(creds, log);
 
             log.LogInformation("Number of subscriptions: " + subs.Count()); 
 
@@ -44,7 +44,7 @@ namespace ScaleDownEventHubs
         }
 
 
-        private static IEnumerable<ISubscription> GetSubscriptions(AzureCredentials credentials, ILogger log)
+        private static IEnumerable<ISubscription> GetAzureSubscriptions(AzureCredentials credentials, ILogger log)
         {
             log.LogInformation("Authenticated as service principal");
             var azure = Azure.Authenticate(credentials);
@@ -76,7 +76,7 @@ namespace ScaleDownEventHubs
             {
                 try
                 {
-                    ScaleDownNamespace(ns, ehClient, log);
+                    ScaleDownEHInNamespace(ns, ehClient, log);
                 }
                 catch (Exception e)
                 {
@@ -115,9 +115,9 @@ namespace ScaleDownEventHubs
             return nsList;
         }
 
-        private static void ScaleDownNamespace(EventhubNamespace ns, EventHubManagementClient ehClient, ILogger log)
+        private static void ScaleDownEHInNamespace(EventhubNamespace ns, EventHubManagementClient ehClient, ILogger log)
         {
-            log.LogInformation($"ScaleDownNamespace for ns: {ns.Namespace}");
+            log.LogInformation($"ScaleDownEHInNamespace for ns: {ns.Namespace}");
 
             var nsInfo = ehClient.Namespaces.Get(ns.ResourceGroup, ns.Namespace);
             if (nsInfo.Sku.Capacity <= ns.TargetThroughputUnits)
@@ -135,7 +135,7 @@ namespace ScaleDownEventHubs
             ehClient.Namespaces.Update(ns.ResourceGroup, ns.Namespace, nsUpdate);
         }
 
-        private static AzureCredentials GetCredentials(IConfigurationRoot config, ILogger log)
+        private static AzureCredentials GetAzureCredentials(IConfigurationRoot config, ILogger log)
         {
             var clientId = config["ClientId"];
             var clientSecret = config["ClientSecret"];
